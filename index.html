@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ESG 披露收资工具</title>
+<link rel="stylesheet" href="assets/styles.css">
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page">
+    <h1>ESG 披露收资工具</h1>
+    <div class="sub">合规披露 × 评级映射 · 汇总填报 · 数据保存在本浏览器（按报告年度归档）</div>
+  </header>
+
+  <!-- ============ 基本信息 ============ -->
+  <section class="card">
+    <h2>基本信息</h2>
+    <div class="grid">
+      <div class="field">
+        <label>所属组织</label>
+        <select class="select" id="f_org"><option>集团总部</option><option>华南分公司</option><option>华东分公司</option></select>
+        <div class="note">用于报告归档与数据归属标识</div>
+      </div>
+      <div class="field">
+        <label><span class="req">*</span>报告年度</label>
+        <select class="select" id="f_year"></select>
+        <div class="note">切换年度查看 / 填写对应年度数据；上年数据用于「一键引用」与同比</div>
+      </div>
+      <div class="field full">
+        <label><span class="req">*</span>统计范围</label>
+        <input class="input" id="f_scope" placeholder="例：集团总部及北京、广州、贵阳三地子公司（不含参股公司）">
+        <div class="note">说明本次汇总数据覆盖哪些企业 / 法人主体，与「所属组织」区分开</div>
+      </div>
+      <div class="field">
+        <label><span class="req">*</span>公司全称</label>
+        <input class="input" id="f_company" placeholder="例：医渡科技">
+      </div>
+      <div class="field">
+        <label><span class="req">*</span>GICS行业</label>
+        <select class="select" id="f_gics">
+          <option value="">请选择</option>
+          <option>能源</option><option>原材料</option><option>工业</option>
+          <option>可选消费</option><option>主要消费</option><option>医疗保健</option>
+          <option>金融</option><option>信息技术</option><option>通信服务</option>
+          <option>公用事业</option><option>房地产</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>股票简称</label>
+        <input class="input" id="f_stockName">
+      </div>
+      <div class="field">
+        <label>股票代码</label>
+        <input class="input" id="f_stockCode" placeholder="例：2158.HK">
+      </div>
+      <div class="field full">
+        <label><span class="req">*</span>企业主营业务</label>
+        <input class="input" id="f_biz" placeholder="请精准简洁描述企业的主营业务">
+      </div>
+      <div class="field full">
+        <label><span class="req">*</span>是否上市 / 上市交易所</label>
+        <div class="radios" id="r_listed">
+          <label><input type="radio" name="listed" value="非上市公司">非上市公司</label>
+          <label><input type="radio" name="listed" value="上市公司">上市公司</label>
+          <span style="color:#d8dce3">|</span>
+          <label><input type="radio" name="ex" value="上交所">上交所</label>
+          <label><input type="radio" name="ex" value="深交所">深交所</label>
+          <label><input type="radio" name="ex" value="北交所">北交所</label>
+          <label><input type="radio" name="ex" value="香港交易所">香港交易所</label>
+          <label><input type="radio" name="ex" value="其他">其他</label>
+        </div>
+      </div>
+      <div class="field full">
+        <label><span class="req">*</span>企业规模 / 主要市场 / 数据基础</label>
+        <div class="radios" id="r_scale">
+          <label><input type="radio" name="size" value="小型">小型</label>
+          <label><input type="radio" name="size" value="中型">中型</label>
+          <label><input type="radio" name="size" value="大型">大型</label>
+          <span style="color:#d8dce3">|</span>
+          <label><input type="radio" name="mkt" value="欧盟">欧盟</label>
+          <label><input type="radio" name="mkt" value="国际">国际</label>
+          <label><input type="radio" name="mkt" value="国内">国内</label>
+          <span style="color:#d8dce3">|</span>
+          <label><input type="radio" name="db" value="数据非常少">数据非常少</label>
+          <label><input type="radio" name="db" value="数据基础一般">数据基础一般</label>
+          <label><input type="radio" name="db" value="各类数据较为齐全">各类数据较为齐全</label>
+        </div>
+      </div>
+    </div>
+    <details class="optional" id="officeBox">
+      <summary>办公地点信息（人数与面积可用于密度类指标口径）</summary>
+      <div class="optional-body">
+        <table class="office-table">
+          <thead><tr><th>地点</th><th>办公面积（平方米）</th><th>人数</th><th>备注</th><th style="width:50px"></th></tr></thead>
+          <tbody id="officeBody"></tbody>
+        </table>
+        <button class="tool-btn" id="btnAddOffice" style="margin-top:8px">＋ 新增办公地点</button>
+      </div>
+    </details>
+  </section>
+
+  <!-- ============ 披露标准 ============ -->
+  <section class="card">
+    <h2><span class="req">*</span>披露标准 <span class="h2sub">勾选后，下方填报区按所选标准动态生成指标页签</span></h2>
+    <div class="checks" id="stdChecks">
+      <label class="std-check on"><input type="checkbox" value="hkex" checked>港交所《ESG守则》<span class="meta">13项主题 · 132项指标</span></label>
+      <label class="std-check"><input type="checkbox" value="mof">财政部《基本准则（试行）》<span class="meta">示例条款 · 待补全</span></label>
+      <label class="std-check"><input type="checkbox" value="exchange">沪深北《可持续发展报告指引》<span class="meta">23项议题 · 315项指标</span></label>
+      <label class="std-check"><input type="checkbox" value="issb">ISSB（IFRS S1 / S2）<span class="meta">示例条款 · 待补全</span></label>
+    </div>
+
+    <details class="optional">
+      <summary>可选设置 · 参考评级标准</summary>
+      <div class="optional-body" id="optRatings">
+        <div class="note" style="margin-bottom:8px">仅作指标映射与准备度校验，不产生额外填报任务；可复选：</div>
+        <label class="opt-check"><input type="checkbox" value="MSCI">MSCI</label>
+        <label class="opt-check"><input type="checkbox" value="CSA（标普）">CSA（标普）</label>
+        <label class="opt-check"><input type="checkbox" value="FTSE Russell">FTSE Russell</label>
+        <label class="opt-check"><input type="checkbox" value="CDP">CDP</label>
+        <label class="opt-check"><input type="checkbox" value="EcoVadis">EcoVadis</label>
+        <label class="opt-check"><input type="checkbox" value="中证">中证</label>
+        <label class="opt-check"><input type="checkbox" value="恒生">恒生</label>
+        <label class="opt-check"><input type="checkbox" value="Wind">Wind</label>
+      </div>
+    </details>
+  </section>
+
+  <!-- ============ 数据填报 ============ -->
+  <section class="card" id="fill">
+    <h2>数据填报 <span class="h2sub">仅填写汇总数据 · 数据按「报告年度 + 统计范围」归档</span>
+      <span class="toolbar">
+        <button class="tool-btn" id="btnImport">⇪ 导入 Excel 批量填数</button>
+        <button class="tool-btn" id="btnExport">⇩ 导出填报结果（按标准分表）</button>
+        <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none">
+      </span>
+    </h2>
+    <div class="tabzone">
+      <div class="std-tabs" id="stdTabs"></div>
+      <div id="pgSlot"></div>
+      <div id="stdBody">
+        <div class="std-desc" id="stdDesc"></div>
+        <div class="topic-row" id="topicRow"></div>
+        <div id="itemList"></div>
+      </div>
+    </div>
+  </section>
+
+  <footer>指标库维护见 assets/data.js · 数据仅保存在本浏览器 localStorage，清除浏览器数据前请先导出 Excel 备份</footer>
+</div>
+
+<script src="vendor/xlsx.full.min.js"></script>
+<script src="assets/data.js"></script>
+<script src="assets/app.js"></script>
+</body>
+</html>
