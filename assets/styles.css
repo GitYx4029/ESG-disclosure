@@ -197,5 +197,5 @@ tr.blk.off .blk-arrow{transform:rotate(-90deg)}
 .blk-cnt{margin-left:8px;color:#a4a9b1;font-size:11.5px;font-weight:400}
 .tg-hd{cursor:pointer;user-select:none;display:flex;align-items:center;gap:8px}
 .tg-arrow{color:#8a8f99;font-size:12px;transition:transform .15s}
-.topic-sec.collapsed .tg-arrow{transform90deg)}
+.topic-sec.collapsed .tg-arrow{transform:rotate(-90deg)}
 .topic-sec.collapsed .tg-body{display:none}
