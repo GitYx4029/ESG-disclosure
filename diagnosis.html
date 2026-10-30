@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ESG 披露诊断报告</title>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{background:#f3f5f9}
+  body{font-family:-apple-system,"PingFang SC","Microsoft YaHei","Helvetica Neue",sans-serif;color:#1f2329;font-size:14px;line-height:1.6}
+  .wrap{max-width:1040px;margin:0 auto;padding:28px 20px 80px}
+
+  header.page{margin-bottom:18px}
+  header.page h1{font-size:20px;font-weight:600}
+  header.page .sub{color:#8a8f99;font-size:13px;margin-top:4px}
+
+  .card{background:#fff;border-radius:10px;padding:22px 26px;margin-bottom:20px;box-shadow:0 1px 3px rgba(15,30,60,.05)}
+
+  /* ---------- 顶部总览（合并原两张统计卡） ---------- */
+  .overview{display:flex;gap:48px;align-items:center;flex-wrap:wrap}
+  .ov-left{min-width:200px}
+  .ov-sys{font-size:13px;color:#8a8f99;margin-bottom:6px}
+  .ov-score{font-size:34px;font-weight:700;letter-spacing:-.5px}
+  .ov-score small{font-size:14px;color:#9aa0aa;font-weight:400}
+  .ov-done{margin-top:6px;font-size:13px;color:#4c515a}
+  .ov-right{flex:1;min-width:320px}
+  .bar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:#eef0f4}
+  .bar i{display:block;height:100%}
+  .s-full{background:#34a853}.s-part{background:#f5a623}.s-qual{background:#e8843c}.s-none{background:#d6dae2}
+  .legend{display:flex;gap:22px;flex-wrap:wrap;margin-top:10px;font-size:13px;color:#4c515a}
+  .legend .k{display:flex;align-items:center;gap:6px}
+  .legend .dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+  .legend b{font-weight:600;color:#1f2329}
+  .legend .pct{color:#9aa0aa;font-size:12px}
+
+  /* ---------- 议题卡片 ---------- */
+  .sec-title{font-size:16px;font-weight:600;margin:26px 0 14px}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:820px){.grid{grid-template-columns:1fr}}
+  .topic{background:#fff;border-radius:10px;padding:20px 22px;box-shadow:0 1px 3px rgba(15,30,60,.05);display:flex;flex-direction:column}
+
+  /* ① 议题名称 + 诊断状态 */
+  .t-head{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+  .t-name{font-size:15px;font-weight:600}
+  .diag{font-size:12px;padding:2px 10px;border-radius:10px;white-space:nowrap}
+  .d-full{background:#e6f6ec;color:#12934f}
+  .d-part{background:#fff3e6;color:#c25e00}
+  .d-none{background:#f0f2f6;color:#8a8f99}
+
+  /* ② 识别的结果 */
+  .blk{margin-top:12px}
+  .blk .lb{font-size:12px;color:#9aa0aa;margin-bottom:3px}
+  .blk .tx{font-size:13.5px;color:#1f2329}
+
+  /* ③ 需要完善的指标 */
+  .gaps{margin-top:12px;padding-top:12px;border-top:1px dashed #e9ecf1}
+  .gap-list{margin-top:4px}
+  .gap{display:flex;gap:8px;font-size:13px;padding:3px 0;color:#4c515a}
+  .gap .no{color:#2f6bff;font-weight:600;white-space:nowrap}
+  .gap-none{font-size:13px;color:#12934f}
+  .more{font-size:12px;color:#9aa0aa;margin-top:6px}
+  .more a{color:#2f6bff;cursor:pointer;text-decoration:none}
+
+  footer{color:#b0b5bd;font-size:12px;text-align:center;margin-top:30px}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="page">
+    <h1>ESG 披露诊断报告</h1>
+    <div class="sub">对照所选披露标准 / 评级体系逐指标诊断 · 样例体系：EcoVadis（333 项指标）</div>
+  </header>
+
+  <!-- ============ 诊断总览（原「各体系诊断表现」+「指标披露程度统计」合并为一张卡） ============ -->
+  <section class="card">
+    <div class="overview">
+      <div class="ov-left">
+        <div class="ov-sys">诊断体系：EcoVadis</div>
+        <div class="ov-score">47.90 <small>/ 100</small></div>
+        <div class="ov-done">已披露 <b>114 / 333</b> 项指标</div>
+      </div>
+      <div class="ov-right">
+        <div class="bar">
+          <i class="s-full" style="width:34.2%"></i><i class="s-part" style="width:25.8%"></i><i class="s-qual" style="width:3.0%"></i><i class="s-none" style="width:37.0%"></i>
+        </div>
+        <div class="legend">
+          <span class="k"><i class="dot s-full"></i>完整披露 <b>114</b> <span class="pct">34.2%</span></span>
+          <span class="k"><i class="dot s-part"></i>部分披露 <b>86</b> <span class="pct">25.8%</span></span>
+          <span class="k"><i class="dot s-qual"></i>仅定性披露 <b>10</b> <span class="pct">3.0%</span></span>
+          <span class="k"><i class="dot s-none"></i>未披露 <b>123</b> <span class="pct">36.9%</span></span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="sec-title">关键议题专项结论</div>
+  <div class="grid">
+
+    <!-- 卡片模板：①议题名称+诊断状态 → ②识别的结果（已有……） → ③需要完善的指标包括 -->
+    <div class="topic">
+      <div class="t-head"><span class="t-name">可持续发展治理</span><span class="diag d-part">已部分披露</span></div>
+      <div class="blk"><div class="lb">识别的结果</div><div class="tx">已有治理职责、气候目标与进度跟踪的原文依据；管理层薪酬与减排目标进度的关联尚未具体说明。</div></div>
+      <div class="gaps"><div class="lb" style="font-size:12px;color:#9aa0aa">需要完善的指标包括</div>
+        <div class="gap-list">
+          <div class="gap"><span class="no">134</span>管理层薪酬与减排目标挂钩机制</div>
+          <div class="gap"><span class="no">139</span>温室气体减排目标进展及审查结果</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="topic">
+      <div class="t-head"><span class="t-name">利益相关方沟通与重要性评估</span><span class="diag d-full">已完整披露</span></div>
+      <div class="blk"><div class="lb">识别的结果</div><div class="tx">已有识别、影响与财务重要性评估及矩阵，2025 年延续往年评估结果。</div></div>
+      <div class="gaps"><div class="lb" style="font-size:12px;color:#9aa0aa">需要完善的指标包括</div>
+        <div class="gap-none">无，当前议题已完整披露。</div>
+      </div>
+    </div>
+
+    <div class="topic">
+      <div class="t-head"><span class="t-name">应对气候变化</span><span class="diag d-part">已部分披露</span></div>
+      <div class="blk"><div class="lb">识别的结果</div><div class="tx">已有范围 1 排放 116,326.17 tCO₂e、范围 2 排放 1,079,833.21 tCO₂e 的列示；范围 2 核算方法、范围 3 绝对量、限期行动安排与验证信息仍有缺口。</div></div>
+      <div class="gaps"><div class="lb" style="font-size:12px;color:#9aa0aa">需要完善的指标包括</div>
+        <div class="gap-list">
+          <div class="gap"><span class="no">31</span>经验证的碳抵消额度采购</div>
+          <div class="gap"><span class="no">35</span>燃料替代节能与减排措施</div>
+          <div class="gap"><span class="no">36</span>碳捕获与储存（CCS）措施</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="topic">
+      <div class="t-head"><span class="t-name">员工安全与发展</span><span class="diag d-part">已部分披露</span></div>
+      <div class="blk"><div class="lb">识别的结果</div><div class="tx">已有雇佣、职业健康安全、培训与员工结构数据；技能培训专门覆盖率、全部培训人均时长、损失工作日及维生工资和条件画像信息仍需补充。</div></div>
+      <div class="gaps"><div class="lb" style="font-size:12px;color:#9aa0aa">需要完善的指标包括</div>
+        <div class="gap-list">
+          <div class="gap"><span class="no">145</span>工作条件政策及目标</div>
+          <div class="gap"><span class="no">146</span>结社自由与集体谈判政策及目标</div>
+          <div class="gap"><span class="no">148</span>禁止童工、强迫劳动与人口贩运政策及目标</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="topic">
+      <div class="t-head"><span class="t-name">产品和服务安全与质量</span><span class="diag d-part">已部分披露</span></div>
+      <div class="blk"><div class="lb">识别的结果</div><div class="tx">已有质量体系、产品标签和环保认证的依据；健康安全专项量化绩效、召回程序和 SDS 信息未完整列示。</div></div>
+      <div class="gaps"><div class="lb" style="font-size:12px;color:#9aa0aa">需要完善的指标包括</div>
+        <div class="gap-list">
+          <div class="gap"><span class="no">27</span>产品健康与安全政策及目标</div>
+          <div class="gap"><span class="no">91</span>产品安全应急响应与召回程序</div>
+          <div class="gap"><span class="no">92</span>产品健康与安全外部反馈机制</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="topic">
+      <div class="t-head"><span class="t-name">信息安全与客户隐私保护</span><span class="diag d-part">已部分披露</span></div>
+      <div class="blk"><div class="lb">识别的结果</div><div class="tx">已有信息安全制度、分级风险管理、事件处置和培训；第三方数据保护、保存期限、同意机制、事件数量与认证覆盖仍有缺口。</div></div>
+      <div class="gaps"><div class="lb" style="font-size:12px;color:#9aa0aa">需要完善的指标包括</div>
+        <div class="gap-list">
+          <div class="gap"><span class="no">15</span>商业道德相关认证</div>
+          <div class="gap"><span class="no">308</span>信息安全与数据保护政策及目标</div>
+          <div class="gap"><span class="no">317</span>第三方信息安全尽职调查</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="topic">
+      <div class="t-head"><span class="t-name">董事会多元化与独立性</span><span class="diag d-full">已完整披露</span></div>
+      <div class="blk"><div class="lb">识别的结果</div><div class="tx">已有女性董事占比数据：女性董事 1 人、董事 9 人，占比 11.11%。</div></div>
+      <div class="gaps"><div class="lb" style="font-size:12px;color:#9aa0aa">需要完善的指标包括</div>
+        <div class="gap-none">无，当前议题已完整披露。</div>
+      </div>
+    </div>
+
+    <div class="topic">
+      <div class="t-head"><span class="t-name">反商业贿赂及反贪污</span><span class="diag d-part">已部分披露</span></div>
+      <div class="blk"><div class="lb">识别的结果</div><div class="tx">已有反腐败制度、监督机构、举报保护和干部培训的列示；定量目标、第三方尽调范围、确认案件数与培训覆盖口径未完整列示。</div></div>
+      <div class="gaps"><div class="lb" style="font-size:12px;color:#9aa0aa">需要完善的指标包括</div>
+        <div class="gap-list">
+          <div class="gap"><span class="no">15</span>商业道德相关认证</div>
+          <div class="gap"><span class="no">304</span>反腐败政策及目标</div>
+          <div class="gap"><span class="no">305</span>利益冲突管理政策及目标</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <footer>ESG 披露诊断报告 · 议题卡片结构：议题名称＋诊断状态 → 识别的结果 → 需要完善的指标</footer>
+</div>
+</body>
+</html>

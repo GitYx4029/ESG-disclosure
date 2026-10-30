@@ -146,3 +146,56 @@
 .office-table th{text-align:left;color:#8a8f99;font-weight:500;padding:6px 8px;font-size:12px}
 .office-table td{padding:4px 8px 4px 0}
 .office-table .input{padding:6px 9px}
+
+/* ---------------- 初步诊断缺口联动 ---------------- */
+#diagBar{margin:2px 0 14px}
+.diagbar{display:flex;align-items:center;gap:12px;flex-wrap:wrap;padding:10px 14px;background:#fff8f0;border:1px solid #f0d9b5;border-radius:10px;font-size:12.5px}
+.diag-detail{margin-top:8px;padding:6px 14px 10px;background:#fffaf2;border:1px solid #f3e2c8;border-radius:10px;font-size:12.5px}
+.dd-meta{color:#b0a08a;font-size:11.5px;padding:6px 0 4px}
+.dd-row{display:flex;align-items:flex-start;gap:10px;padding:7px 0;border-top:1px dashed #f0e4cd;flex-wrap:wrap}
+.dd-row .dd-name{font-weight:600;color:#4c515a;min-width:200px}
+.dd-gaps{display:flex;flex-wrap:wrap;gap:6px;flex:1}
+.dd-ok{color:#1e7e34;font-size:12px}
+.dg-fold{background:none;border:none;color:#b4541f;cursor:pointer;font-size:12.5px;padding:2px 4px}
+.dg-tag{background:#b4541f;color:#fff;border-radius:4px;padding:2px 8px;font-size:12px;white-space:nowrap}
+.dg-sum{color:#5c5f66}
+.dg-warn{color:#c2571b;font-weight:600}
+.dg-act{margin-left:auto;display:flex;gap:12px;align-items:center}
+.tool-btn.dg-on{background:#b4541f;color:#fff;border-color:#b4541f}
+.dg-link{color:#2f6bff;text-decoration:none;font-size:12.5px;white-space:nowrap}
+.dg-badge{display:inline-block;min-width:16px;padding:0 6px;margin-left:6px;border-radius:9px;background:#fdf0e3;color:#c2571b;font-size:11px;line-height:17px;text-align:center;vertical-align:1px}
+.dg-badge.dg-full{background:#e6f4ea;color:#1e7e34}
+.dg-badge.dg-part{background:#fdf0e3;color:#c2571b}
+.dg-badge.dg-none{background:#eceff3;color:#5c5f66}
+.diag-panel{margin:0 0 14px;padding:12px 14px;background:#fffaf2;border:1px solid #f3e2c8;border-left:3px solid #e8843c;border-radius:8px;font-size:12.5px;line-height:1.7}
+.dp-head{font-weight:600;color:#8a4b12;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.dp-badge{font-weight:400;font-size:11px;padding:1px 8px;border-radius:9px;background:#fdf0e3;color:#c2571b}
+.dp-base{font-weight:400;color:#b0b5bd;font-size:11.5px}
+.dp-found{margin-top:6px;color:#4c515a}
+.dp-found .k,.dp-gaps .k{color:#b07d3f;font-size:11.5px;margin-right:6px}
+.dp-gaps{margin-top:8px;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.dp-gap{background:#fff;border:1px solid #f3e2c8;border-radius:6px;padding:2px 8px;color:#8a4b12;font-size:12px}
+.dp-more{color:#8a8f99;font-size:12px}
+.dp-more a{color:#2f6bff;text-decoration:none}
+
+/* 指标编号前缀说明 */
+.code-lg{margin-left:12px;color:#a4a9b1;font-size:11.5px;font-weight:400}
+
+/* 披露标准保存门闸 */
+.std-gate{display:flex;align-items:center;gap:10px;margin:10px 0 0;padding:9px 12px;background:#fff8ef;border:1px solid #f3e2c8;border-left:3px solid #e8843c;border-radius:8px;font-size:12.5px}
+.sg-txt{color:#8a4b12}
+.std-gate .sg-save{margin-left:auto}
+.tabzone{position:relative}
+.tabzone.locked>#stdTabs,.tabzone.locked>#pgSlot,.tabzone.locked>#stdBody{opacity:.35;pointer-events:none;user-select:none;filter:saturate(.4)}
+.tabzone.locked::after{content:'请先保存披露标准选择，再开始填写';position:absolute;left:50%;top:110px;transform:translateX(-50%);padding:10px 18px;background:#fffdf9;border:1px solid #f0d9b5;border-radius:8px;color:#8a4b12;font-size:13px;font-weight:600;box-shadow:0 6px 18px rgba(180,84,31,.08);z-index:5;white-space:nowrap}
+
+/* 主题组折叠（定量批量 / 定性撰写 / 定性·定量） */
+.blk{cursor:pointer}
+.blk:hover td{background:#f5f7fa !important}
+tr.blk .blk-arrow{display:inline-block;margin-right:6px;color:#8a8f99;transition:transform .15s}
+tr.blk.off .blk-arrow{transform:rotate(-90deg)}
+.blk-cnt{margin-left:8px;color:#a4a9b1;font-size:11.5px;font-weight:400}
+.tg-hd{cursor:pointer;user-select:none;display:flex;align-items:center;gap:8px}
+.tg-arrow{color:#8a8f99;font-size:12px;transition:transform .15s}
+.topic-sec.collapsed .tg-arrow{transform90deg)}
+.topic-sec.collapsed .tg-body{display:none}
