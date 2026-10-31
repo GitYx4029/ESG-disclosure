@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>管理员 · 参考信息库 — ESG 披露收资工具</title>
+<link rel="stylesheet" href="assets/styles.css">
+<style>
+  /* ---------- 管理员口令门 ---------- */
+  .adm-gate{max-width:380px;margin:14vh auto 0;background:#fff;border-radius:10px;padding:28px 30px;box-shadow:0 1px 3px rgba(15,30,60,.06)}
+  .adm-gate h1{font-size:17px;font-weight:600;margin-bottom:4px}
+  .adm-gate .sub{font-size:12.5px;color:#8a8f99;margin-bottom:16px}
+  .adm-gate .input{margin-bottom:10px}
+  .adm-err{color:#d4380d;font-size:12.5px;min-height:18px;margin-bottom:6px}
+  .adm-gate .tool-btn{width:100%;padding:8px 0}
+  .adm-gate .back{display:block;text-align:center;margin-top:12px;font-size:12.5px;color:#9aa0aa;text-decoration:none}
+  .adm-gate .back:hover{color:#2f6bff}
+
+  /* ---------- 头部 ---------- */
+  header.page{position:relative}
+  header.page .adm-badge{font-size:11px;padding:2px 9px;border-radius:9px;background:#1f2329;color:#fff;font-weight:500;vertical-align:2px;margin-left:8px}
+  header.page .sub a{color:#2f6bff;text-decoration:none}
+  header.page .backhome{position:absolute;right:2px;top:6px;font-size:12.5px;color:#8a8f99;text-decoration:none}
+  header.page .backhome:hover{color:#2f6bff}
+
+  /* ---------- 表单 ---------- */
+  .tag-input-row{display:flex;gap:10px;align-items:center}
+  .tag-input-row .input{flex:1}
+  .tag-presets{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .tag-pre{font-size:11.5px;padding:2px 10px;border-radius:10px;border:1px solid #d8dce3;color:#5c5f66;cursor:pointer;background:#fff;user-select:none}
+  .tag-pre:hover{border-color:#2f6bff;color:#2f6bff}
+  .form-btns{display:flex;gap:10px;margin-top:16px}
+  .btn-primary{border:none;background:#2f6bff;color:#fff;border-radius:6px;padding:7px 22px;font-size:13px;cursor:pointer;font-family:inherit}
+  .btn-primary:hover{background:#1f59e0}
+  #formCard.editing{border:1.5px solid #2f6bff}
+
+  /* ---------- 筛选条 ---------- */
+  .filter-bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin:12px 0 4px}
+  .filter-bar .input{max-width:260px}
+  .chips{display:flex;gap:6px;flex-wrap:wrap}
+  .chip{font-size:12px;padding:3px 12px;border-radius:12px;background:#f0f2f6;color:#4c515a;cursor:pointer;border:1px solid transparent;user-select:none}
+  .chip:hover{color:#2f6bff}
+  .chip.on{background:#e6efff;color:#2f6bff;font-weight:600;border-color:#c2d7ff}
+
+  /* ---------- 条目卡片 ---------- */
+  .ref{border:1px solid #e6e9ef;border-radius:8px;padding:13px 16px;margin-top:12px;transition:.15s}
+  .ref:hover{border-color:#c2d7ff}
+  .ref-hd{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .ref-title{font-weight:600;font-size:14px;color:#1f2329}
+  .ref-tag{font-size:11px;padding:2px 9px;border-radius:9px;white-space:nowrap;background:#e6efff;color:#2f6bff}
+  .ref-tag.t-监管相关更新{background:#fdeeee;color:#d4380d}
+  .ref-tag.t-国外工具参考{background:#e6f6ec;color:#12934f}
+  .ref-tag.t-专业解读{background:#f0e9ff;color:#6b4fbb}
+  .ref-date{font-size:12px;color:#9aa0aa;margin-left:auto;white-space:nowrap}
+  .ref-note{font-size:13px;color:#4c515a;margin-top:7px;white-space:pre-wrap;line-height:1.65}
+  .ref-ft{display:flex;align-items:center;gap:14px;margin-top:9px}
+  .ref-url{font-size:12px;color:#2f6bff;text-decoration:none;word-break:break-all}
+  .ref-url:hover{text-decoration:underline}
+  .ref-ops{margin-left:auto;display:flex;gap:10px;white-space:nowrap}
+  .ref-ops button{background:none;border:none;font-size:12.5px;color:#8a8f99;cursor:pointer;padding:2px 4px;font-family:inherit}
+  .ref-ops button:hover{color:#2f6bff}
+  .ref-ops .del:hover{color:#d4380d}
+  .empty-hint{padding:30px 0}
+</style>
+</head>
+<body>
+
+<!-- ============ 口令门 ============ -->
+<div class="adm-gate" id="gate">
+  <h1>管理员入口</h1>
+  <div class="sub">参考信息库仅面向工具维护者，请输入管理员口令</div>
+  <input class="input" id="pwd" type="password" placeholder="管理员口令" autocomplete="off">
+  <div class="adm-err" id="pwdErr"></div>
+  <button class="tool-btn" id="btnEnter">进入</button>
+  <a class="back" href="index.html">← 返回填报工具</a>
+</div>
+
+<!-- ============ 主界面 ============ -->
+<div class="wrap" id="app" style="display:none">
+
+  <header class="page">
+    <h1>参考信息库<span class="adm-badge">管理员</span></h1>
+    <div class="sub">归档监管动态、海外工具与专业解读，作为本工具迭代完善的参考依据 · 数据保存在本浏览器 localStorage，可用「导出」备份 / 共享</div>
+    <a class="backhome" href="index.html">← 返回填报工具</a>
+  </header>
+
+  <!-- 新增 / 编辑 -->
+  <section class="card" id="formCard">
+    <h2 id="formTitle">新增参考条目</h2>
+    <div class="grid">
+      <div class="field full">
+        <label><span class="req">*</span>标题</label>
+        <input class="input" id="f_title" placeholder="例：证监会《上市公司可持续发展报告电子化规范》逐条解析">
+      </div>
+      <div class="field full">
+        <label><span class="req">*</span>原文链接</label>
+        <input class="input" id="f_url" placeholder="https://…">
+      </div>
+      <div class="field">
+        <label>时间</label>
+        <input class="input" id="f_date" type="date">
+        <div class="note">发布日期或收录日期</div>
+      </div>
+      <div class="field">
+        <label><span class="req">*</span>性质标签</label>
+        <div class="tag-input-row">
+          <input class="input" id="f_tag" list="tagList" placeholder="选择或自定义">
+          <datalist id="tagList"></datalist>
+        </div>
+        <div class="tag-presets" id="tagPresets"></div>
+      </div>
+      <div class="field full">
+        <label>摘要 / 对工具的启示</label>
+        <textarea class="ta" id="f_note" placeholder="要点摘录，以及对本工具迭代方向的参考意义"></textarea>
+      </div>
+    </div>
+    <div class="form-btns">
+      <button class="btn-primary" id="btnSave">保存条目</button>
+      <button class="tool-btn" id="btnCancel" style="display:none">取消编辑</button>
+    </div>
+  </section>
+
+  <!-- 列表 -->
+  <section class="card">
+    <h2>条目列表 <span class="h2sub" id="cntTxt"></span>
+      <span class="toolbar">
+        <button class="tool-btn" id="btnExport">⇩ 导出 JSON</button>
+        <button class="tool-btn" id="btnImport">⇪ 导入 JSON</button>
+        <input type="file" id="fileInput" accept=".json" style="display:none">
+      </span>
+    </h2>
+    <div class="filter-bar">
+      <input class="input" id="f_kw" placeholder="搜索标题 / 摘要 / 链接">
+      <div class="chips" id="chips"></div>
+    </div>
+    <div id="list"></div>
+  </section>
+
+</div>
+
+<script>
+/* ================= 配置 ================= */
+const ADMIN_PWD = 'esg2026';              // 管理员口令（静态站点仅作入口隔离，防君子不防小人，勿放敏感信息）
+const LS_KEY    = 'esgTool.adminRefs.v1';
+const TAG_PRESETS = ['监管相关更新','国外工具参考','专业解读','评级动态','同业实践','其他'];
+
+/* 预置种子数据（首次使用且库为空时载入） */
+const SEED = [
+  {
+    id: 'seed-jrt0356',
+    title: '青悦数据：证监会《上市公司可持续发展报告电子化规范》（JR/T 0356—2026）解析',
+    url: 'https://mp.weixin.qq.com/s/yWUEzQWzFzN0P4il9n27uQ',
+    date: '2026-10-30',
+    tag: '专业解读',
+    note: '证监会公告〔2026〕13号发布、同日施行。A股可持续报告首套机器可读的「数据层」标准：4 套 XBRL 分类标准（srgi/sred/srsd/srgd）、298 个元素（核心 259 + 鼓励 39）、独立 XML 实例文档（不同于欧盟 iXBRL 内嵌路线）。\n要点：报告本体需附「指标—本期—上期」ESG 数据表；元素名发布后冻结，形成稳定元素 ID；56 个「是否」型布尔元素是硬承诺，需配证据索引。\n对工具启示：① 指标库可加 JR/T 0356 元素映射字段（沪深北指引与核心元素同源，映射成本低）；② 「证据来源」字段优先级提升；③ 导出可演进为 XBRL 实例文档 / 标准数据表。'
+  },
+  {
+    id: 'seed-nasdaq-lens',
+    title: 'Nasdaq Lens Disclosure Agents（AI 披露代理套件）',
+    url: 'https://www.nasdaq.com/products/lens/disclosure-agents',
+    date: '2026-10-31',
+    tag: '国外工具参考',
+    note: '纳斯达克 ESG 披露 AI 代理：Research（多标准检索研究）/ Drafting（披露起草）/ Gap Analysis（差距分析）三件套。特点是来源可追溯（source-linked）、产出可复核、内置同业对标。\n对工具启示：P0 增加「证据来源」字段（对标 source-linked）；P1 缺口优先级排序 + AI 起草定性披露（保留人工复核节点）；P2 轻量同业对标。'
+  }
+];
+
+/* ================= 数据层 ================= */
+let refs = [];
+let editingId = null;
+let kw = '';
+let tagFilter = '全部';
+
+function load(){
+  try{ refs = JSON.parse(localStorage.getItem(LS_KEY)) || []; }catch(e){ refs = []; }
+  if(!refs.length){ refs = SEED.slice(); save(); }
+}
+function save(){ localStorage.setItem(LS_KEY, JSON.stringify(refs)); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function uid(){ return 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+/* ================= 口令门 ================= */
+function tryEnter(){
+  const v = document.getElementById('pwd').value.trim();
+  if(v === ADMIN_PWD){
+    sessionStorage.setItem('esgAdmin.ok','1');
+    showApp();
+  }else{
+    document.getElementById('pwdErr').textContent = '口令不正确';
+    document.getElementById('pwd').value = '';
+  }
+}
+function showApp(){
+  document.getElementById('gate').style.display = 'none';
+  document.getElementById('app').style.display = '';
+  renderAll();
+}
+
+/* ================= 表单 ================= */
+function resetForm(){
+  editingId = null;
+  document.getElementById('formTitle').textContent = '新增参考条目';
+  document.getElementById('formCard').classList.remove('editing');
+  ['f_title','f_url','f_tag','f_note'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('f_date').value = new Date().toISOString().slice(0,10);
+  document.getElementById('btnCancel').style.display = 'none';
+}
+function saveEntry(){
+  const title = document.getElementById('f_title').value.trim();
+  const url   = document.getElementById('f_url').value.trim();
+  const date  = document.getElementById('f_date').value;
+  const tag   = document.getElementById('f_tag').value.trim();
+  const note  = document.getElementById('f_note').value.trim();
+  if(!title || !url || !tag){ alert('标题、原文链接、性质标签为必填项'); return; }
+  if(!/^https?:\/\//i.test(url)){ alert('原文链接需以 http(s):// 开头'); return; }
+  if(editingId){
+    const it = refs.find(r=>r.id===editingId);
+    if(it) Object.assign(it, {title,url,date,tag,note});
+  }else{
+    refs.push({id:uid(), title, url, date, tag, note});
+  }
+  save(); resetForm(); renderAll();
+}
+function editEntry(id){
+  const it = refs.find(r=>r.id===id); if(!it) return;
+  editingId = id;
+  document.getElementById('formTitle').textContent = '编辑条目';
+  document.getElementById('formCard').classList.add('editing');
+  document.getElementById('f_title').value = it.title;
+  document.getElementById('f_url').value   = it.url;
+  document.getElementById('f_date').value  = it.date || '';
+  document.getElementById('f_tag').value   = it.tag;
+  document.getElementById('f_note').value  = it.note || '';
+  document.getElementById('btnCancel').style.display = '';
+  document.getElementById('formCard').scrollIntoView({behavior:'smooth', block:'start'});
+  document.getElementById('f_title').focus();
+}
+function delEntry(id){
+  const it = refs.find(r=>r.id===id); if(!it) return;
+  if(!confirm('删除条目「' + it.title + '」？')) return;
+  refs = refs.filter(r=>r.id!==id);
+  if(editingId===id) resetForm();
+  save(); renderAll();
+}
+
+/* ================= 渲染 ================= */
+function allTags(){
+  const set = new Set(TAG_PRESETS);
+  refs.forEach(r=>set.add(r.tag));
+  return [...set];
+}
+function visibleRefs(){
+  return refs
+    .filter(r=> tagFilter==='全部' || r.tag===tagFilter)
+    .filter(r=> !kw || (r.title+' '+r.note+' '+r.url).toLowerCase().includes(kw.toLowerCase()))
+    .sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+}
+function renderChips(){
+  const tags = ['全部', ...allTags()];
+  document.getElementById('chips').innerHTML = tags.map(t=>{
+    const n = t==='全部' ? refs.length : refs.filter(r=>r.tag===t).length;
+    return '<span class="chip'+(t===tagFilter?' on':'')+'" onclick="pickTag(\''+esc(t)+'\')">'+esc(t)+' '+n+'</span>';
+  }).join('');
+}
+window.pickTag = function(t){ tagFilter = t; renderAll(); };
+
+function renderList(){
+  const list = visibleRefs();
+  document.getElementById('cntTxt').textContent = '共 ' + refs.length + ' 条' + (tagFilter!=='全部'||kw ? ' · 筛选出 ' + list.length + ' 条' : '');
+  const el = document.getElementById('list');
+  if(!list.length){
+    el.innerHTML = '<div class="empty-hint">没有匹配的条目，调整筛选或点击上方「新增参考条目」</div>';
+    return;
+  }
+  el.innerHTML = list.map(r=>
+    '<div class="ref">'
+    + '<div class="ref-hd">'
+    +   '<span class="ref-title">'+esc(r.title)+'</span>'
+    +   '<span class="ref-tag t-'+esc(r.tag)+'">'+esc(r.tag)+'</span>'
+    +   (r.date ? '<span class="ref-date">'+esc(r.date)+'</span>' : '')
+    + '</div>'
+    + (r.note ? '<div class="ref-note">'+esc(r.note)+'</div>' : '')
+    + '<div class="ref-ft">'
+    +   '<a class="ref-url" href="'+esc(r.url)+'" target="_blank" rel="noopener">'+esc(r.url)+'</a>'
+    +   '<span class="ref-ops">'
+    +     '<button onclick="editEntry(\''+r.id+'\')">编辑</button>'
+    +     '<button class="del" onclick="delEntry(\''+r.id+'\')">删除</button>'
+    +   '</span>'
+    + '</div>'
+    + '</div>'
+  ).join('');
+}
+function renderTagPresets(){
+  document.getElementById('tagPresets').innerHTML = TAG_PRESETS.map(t=>'<span class="tag-pre" onclick="document.getElementById(\'f_tag\').value=\''+t+'\'">'+t+'</span>').join('');
+  document.getElementById('tagList').innerHTML = allTags().map(t=>'<option value="'+esc(t)+'">').join('');
+}
+function renderAll(){ renderTagPresets(); renderChips(); renderList(); }
+
+/* ================= 导入 / 导出 ================= */
+function exportJson(){
+  const blob = new Blob([JSON.stringify(refs, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = '参考信息库-' + new Date().toISOString().slice(0,10) + '.json';
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+function importJson(file){
+  const rd = new FileReader();
+  rd.onload = ()=>{
+    try{
+      const arr = JSON.parse(rd.result);
+      if(!Array.isArray(arr)) throw 0;
+      let added = 0;
+      const urls = new Set(refs.map(r=>r.url));
+      arr.forEach(r=>{
+        if(!r || !r.title || !r.url || urls.has(r.url)) return;
+        refs.push({id: r.id && !refs.some(x=>x.id===r.id) ? r.id : uid(),
+          title:String(r.title), url:String(r.url), date:String(r.date||''),
+          tag:String(r.tag||'其他'), note:String(r.note||'')});
+        urls.add(r.url); added++;
+      });
+      save(); renderAll();
+      alert('导入完成：新增 ' + added + ' 条（按链接去重）');
+    }catch(e){ alert('导入失败：不是有效的 JSON 文件'); }
+  };
+  rd.readAsText(file);
+}
+
+/* ================= 事件绑定 ================= */
+document.getElementById('btnEnter').onclick = tryEnter;
+document.getElementById('pwd').addEventListener('keydown', e=>{ if(e.key==='Enter') tryEnter(); });
+document.getElementById('btnSave').onclick = saveEntry;
+document.getElementById('btnCancel').onclick = resetForm;
+document.getElementById('f_kw').addEventListener('input', e=>{ kw = e.target.value.trim(); renderList(); renderChips(); });
+document.getElementById('btnExport').onclick = exportJson;
+document.getElementById('btnImport').onclick = ()=>document.getElementById('fileInput').click();
+document.getElementById('fileInput').addEventListener('change', e=>{ if(e.target.files[0]) importJson(e.target.files[0]); e.target.value=''; });
+
+/* ================= 启动 ================= */
+load();
+resetForm();
+if(sessionStorage.getItem('esgAdmin.ok')==='1') showApp();
+</script>
+
+</body>
+</html>
