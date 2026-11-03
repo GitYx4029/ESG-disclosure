@@ -144,7 +144,7 @@ const ADMIN_PWD = 'esg2026';              // 管理员口令（静态站点仅�
 const LS_KEY    = 'esgTool.adminRefs.v1';
 const TAG_PRESETS = ['监管相关更新','国外工具参考','专业解读','评级动态','同业实践','其他'];
 
-/* 预置种子数据（首次使用且库为空时载入） */
+/* 预置种子数据（首次使用时载入） */
 const SEED = [
   {
     id: 'seed-jrt0356',
@@ -161,6 +161,14 @@ const SEED = [
     date: '2026-10-31',
     tag: '国外工具参考',
     note: '纳斯达克 ESG 披露 AI 代理：Research（多标准检索研究）/ Drafting（披露起草）/ Gap Analysis（差距分析）三件套。特点是来源可追溯（source-linked）、产出可复核、内置同业对标。\n对工具启示：P0 增加「证据来源」字段（对标 source-linked）；P1 缺口优先级排序 + AI 起草定性披露（保留人工复核节点）；P2 轻量同业对标。'
+  },
+  {
+    id: 'seed-msc-ai-strategy',
+    title: 'MSC 咨询：AI 可持续发展战略（流程、交付物与服务产品化参考）',
+    url: 'https://aiesg.msc-world.com/?sessionid=',
+    date: '2026-11-03',
+    tag: '同业实践',
+    note: '定位：将可持续发展战略咨询拆成「数据库 + AI 分析 + 顾问与管理层决策」，官网以预约诊断承接项目；未展示客户自行生成完整战略的操作入口。四层资料包括国际框架、公开评级方法论、行业议题与企业实践。\n流程：第1天提供业务目标、已有披露和数据，开展管理层及部门访谈；第2—3天完成同行对标、评级差距、议题排序及五件初稿；第4—5天核查证据和假设、选择方向、定稿确认。宣称交付后持续提示法规、评级方法及市场变化对判断的影响。\n五件交付物：① 对标矩阵——治理、气候、包装、供应链、披露等维度的同行差距；② 议题热力图——财务与影响双重重要性、利益相关方关注度及优先级；③ 战略房子——愿景、目标、三大支柱、举措、指标与责任部门；④ 投入产出规划——三年投入回报、回收期、敏感性及假设；⑤ 三年实施地图——评级披露、产品包装、运营减碳、供应链、品牌沟通、数据系统六条任务线与季度里程碑。\n持续服务：每周奖项与发言机会清单、竞品与议题趋势简报，以及AI利益相关方访谈和授权看板。服务分层：起步约1周；上市公司1—2周；出海2—3周。\n宣传点（机构自述）：一周交付、成本降低80%、50万家企业实践；每个判断带来源、顾问复核、客户非公开数据不入库。匿名消费品案例宣称从300万元/4个月降至60万元/1周，并带来评级、海外渠道等成果；以上规模、效率及成效尚未独立验证。\n对工具启示：把「披露诊断/同行差距 → 重点改善事项 → 责任部门与年度行动计划」串起来；为结论保留证据来源与人工复核；围绕客户决策说明交付价值。投入产出测算应待企业数据及核算依据充分后再加入。\n核查提示：文章标题的「1/10投入」与官网「费用五分之一」口径不同；示例图为演示数据，投入产出图部分年度净额不一致，须独立复算；双语展示不等于已承诺所有交付文件均为双语。\n来源：2026-11-03直接查阅官网文字、五件交付物示例与三项工具；微信文章内容参考所提供的AI提取稿，尚未直接核对16张原图。文章发布日期据该提取稿为2026-11-02。原文：https://mp.weixin.qq.com/s/wr4N8xFvFZztoSTB3ZG0UA'
   }
 ];
 
@@ -171,8 +179,28 @@ let kw = '';
 let tagFilter = '全部';
 
 function load(){
-  try{ refs = JSON.parse(localStorage.getItem(LS_KEY)) || []; }catch(e){ refs = []; }
-  if(!refs.length){ refs = SEED.slice(); save(); }
+  let stored;
+  try{ stored = JSON.parse(localStorage.getItem(LS_KEY)); }catch(e){ stored = null; }
+  refs = Array.isArray(stored) ? stored : SEED.map(r=>({...r}));
+
+  // 为已有信息库补入本次参考；不覆盖编辑，且删除后不在刷新时重建。
+  const migrationKey = LS_KEY + '.seed-msc-ai-strategy-v1';
+  if(!localStorage.getItem(migrationKey)){
+    const entry = SEED.find(r=>r.id==='seed-msc-ai-strategy');
+    const knownUrls = ['https://aiesg.msc-world.com', 'https://mp.weixin.qq.com/s/wr4N8xFvFZztoSTB3ZG0UA'];
+    const alreadyExists = refs.some(r=>{
+      if(r.id===entry.id) return true;
+      try{
+        const url = new URL(r.url);
+        return knownUrls.includes(url.origin + url.pathname.replace(/\/$/, ''));
+      }catch(e){ return false; }
+    });
+    if(!alreadyExists) refs.push({...entry});
+    save();
+    localStorage.setItem(migrationKey, '1');
+  }else if(!Array.isArray(stored)){
+    save();
+  }
 }
 function save(){ localStorage.setItem(LS_KEY, JSON.stringify(refs)); }
 function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
