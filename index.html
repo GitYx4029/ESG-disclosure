@@ -18,8 +18,10 @@
   </header>
 
   <!-- ============ 基本信息 ============ -->
-  <section class="card">
-    <h2>基本信息</h2>
+  <section class="card" id="metaCard">
+    <h2>基本信息 <span class="h2sub" id="metaSummary"></span>
+      <span class="toolbar"><button class="tool-btn" id="btnMetaFold">收起 ▴</button></span>
+    </h2>
     <div class="grid">
       <div class="field">
         <label>所属组织</label>
@@ -149,12 +151,19 @@
   <section class="card" id="fill">
     <h2>数据填报 <span class="h2sub">仅填写汇总数据 · 数据按「报告年度 + 统计范围」归档</span>
       <span class="toolbar">
-        <button class="tool-btn" id="btnImport">⇪ 导入 Excel 批量填数</button>
-        <button class="tool-btn" id="btnExport">⇩ 导出填报结果（按标准分表）</button>
-        <button class="tool-btn" id="btnExportData">⇩ 导出 ESG 数据表（含部门）</button>
+        <button class="tool-btn" id="btnDeptDash" title="按部门查看归口与填报进度，列出未归口指标">▦ 分派总览</button>
+        <button class="tool-btn" id="btnImport" title="支持填报底稿与收资清单两种格式，冲突会列出确认">⇪ 导入 Excel</button>
+        <details class="export-menu" id="exportMenu">
+          <summary class="tool-btn">⇩ 导出 ▾</summary>
+          <div class="em-list">
+            <button id="btnExport">填报底稿（按标准分表，可再导入）</button>
+            <button id="btnExportData">数据表＋收资清单（含部门归口）</button>
+          </div>
+        </details>
         <input type="file" id="fileInput" accept=".xlsx,.xls" style="display:none">
       </span>
     </h2>
+    <div id="deptDash" class="dept-dash" style="display:none"></div>
     <div id="diagBar"></div>
     <div class="tabzone">
       <div class="std-tabs" id="stdTabs"></div>

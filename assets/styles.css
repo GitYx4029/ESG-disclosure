@@ -224,3 +224,45 @@ tr.blk.off .blk-arrow{transform:rotate(-90deg)}
 /* 定量批量视图 · 归口/来源列 */
 table.batch td.c-src .select{width:120px;padding:4px 6px;font-size:12px;margin-bottom:4px}
 table.batch td.c-src .input{width:100%;min-width:170px;padding:4px 6px;font-size:12px}
+
+/* ---------------- 明细台账（自下而上汇总） ---------------- */
+.dt-box{margin-top:8px}
+.dt-toggle{color:#2f6bff;cursor:pointer;font-size:12.5px}
+.dt-toggle:hover{text-decoration:underline}
+.dt-rows{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.dt-row{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+.dt-row .input{padding:5px 8px;font-size:12.5px}
+.dt-row .dt-name{flex:1.4;min-width:140px}
+.dt-row .dt-val{width:120px;flex:none}
+.dt-row .dt-unit{width:80px;flex:none}
+.dt-row .dt-note{flex:1;min-width:110px}
+.dt-row .dt-del{padding:4px 8px}
+.dt-sum{margin-top:6px;font-size:12.5px;color:#4c515a}
+.dt-sum b{color:#2f6bff}
+.dt-add{margin-left:12px;color:#2f6bff;cursor:pointer;font-size:12px}
+.dt-warnline{color:#d4380d;font-size:12px;margin-top:2px}
+.dt-locked{background:#f5f7fa !important;color:#4c515a}
+
+/* 已核对状态 */
+.st-ok{background:#e3eefe;color:#1d4ed8}
+
+/* ---------------- 分派总览 ---------------- */
+.dept-dash{margin:0 0 14px;padding:12px 14px;background:#f7f9ff;border:1px solid #dfe8fb;border-radius:10px;font-size:12.5px}
+.dept-dash table.pv{margin-top:0}
+.dd-ua{margin-top:10px;color:#4c515a;display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.dd-ua-tip{color:#9aa0aa;font-size:11.5px}
+.dd-jump{cursor:pointer}
+.dd-jump:hover{border-color:#2f6bff;color:#2f6bff}
+
+/* ---------------- 导出菜单 ---------------- */
+.export-menu{position:relative}
+.export-menu summary{list-style:none;cursor:pointer}
+.export-menu summary::-webkit-details-marker{display:none}
+.export-menu[open] summary{border-color:#2f6bff;color:#2f6bff}
+.em-list{position:absolute;right:0;top:calc(100% + 4px);z-index:20;background:#fff;border:1px solid #e6e9ef;border-radius:8px;box-shadow:0 8px 24px rgba(15,30,60,.12);padding:4px;min-width:230px}
+.em-list button{display:block;width:100%;text-align:left;border:none;background:none;padding:8px 10px;font-size:12.5px;color:#4c515a;cursor:pointer;border-radius:6px;font-family:inherit}
+.em-list button:hover{background:#f0f4ff;color:#2f6bff}
+
+/* 基本信息折叠 */
+#metaCard.folded .grid,#metaCard.folded details.optional{display:none}
+#metaCard .h2sub{font-weight:400}
