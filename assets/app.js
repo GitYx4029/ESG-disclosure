@@ -28,6 +28,8 @@ let store = loadStore();
 /* 结构迁移：部门清单 + 指标级归口/来源（项目级、跨年度稳定，免年年重填） */
 if(!store.depts) store.depts = [];
 if(!store.itemMeta) store.itemMeta = {};
+if(!store.checked) store.checked = {};   // 已核对 { 'year:std:code': true }
+if(!store.ui) store.ui = {};             // 界面偏好（基本信息折叠等）
 let saveTimer = null;
 function save(){
   clearTimeout(saveTimer);
@@ -36,6 +38,7 @@ function save(){
 function yearData(y){
   y = y || store.meta.year || '2025';
   if(!store.years[y]) store.years[y] = { values:{} };
+  if(!store.years[y].details) store.years[y].details = {};   // 明细台账 { 'std:code': [{name,val,unit,note}] }
   return store.years[y];
 }
 const vkey = (std, code) => std + ':' + code;
@@ -81,6 +84,78 @@ function deptBatchInline(std, ti, items){
   return '<span class="blk-dept" onclick="event.stopPropagation()">'+
     '<select class="select" id="'+selId+'" title="选择部门后批量应用到本议题全部指标">'+deptOptionsHtml('')+'</select>'+
     '<button class="blk-apply" onclick="applyTopicDept(\''+std+'\',\''+codes+'\',\''+selId+'\')">批量归口 '+items.length+' 项</button></span>';
+}
+
+/* ---------------- 明细台账（自下而上：拆解 → 自动汇总 → 勾稽） ---------------- */
+function detailRows(std, code, y){
+  return yearData(y).details[vkey(std, code)] || null;
+}
+function hasDetails(std, code){ const r = detailRows(std, code); return !!(r && r.length); }
+function detailSum(std, code){
+  const rows = detailRows(std, code);
+  if(!rows || !rows.length) return null;
+  let sum = 0, hasNum = false;
+  rows.forEach(r=>{
+    const n = parseFloat(String(r.val||'').replace(/,/g,''));
+    if(!isNaN(n)){ sum += n; hasNum = true; }
+  });
+  return hasNum ? +sum.toFixed(6) : null;
+}
+function syncDetailSum(std, code){
+  const s = detailSum(std, code);
+  if(s===null) return;
+  const k = vkey(std, code), yd = yearData();
+  if(!yd.values[k]) yd.values[k] = {};
+  yd.values[k].v = String(s);
+  save();
+  const inp = document.querySelector('[data-in="'+std+':'+code+'"]');
+  if(inp) inp.value = String(s);
+  const ds = document.querySelector('[data-dsum="'+std+':'+code+'"]');
+  if(ds) ds.textContent = String(s);
+}
+window.detailAdd = function(std, code){
+  const yd = yearData(), k = vkey(std, code);
+  if(!yd.details[k]) yd.details[k] = [];
+  yd.details[k].push({ name:'', val:'', unit:'', note:'' });
+  save(); renderBody();
+};
+window.onDetail = function(std, code, i, field, el){
+  const rows = detailRows(std, code);
+  if(!rows || !rows[i]) return;
+  rows[i][field] = el.value;
+  if(field==='val'){ syncDetailSum(std, code); } else { save(); }
+  refreshStatus(std, code); refreshProgress();
+};
+window.detailDel = function(std, code, i){
+  const yd = yearData(), k = vkey(std, code);
+  if(!yd.details[k]) return;
+  yd.details[k].splice(i,1);
+  if(!yd.details[k].length) delete yd.details[k];
+  syncDetailSum(std, code);
+  save(); renderBody();
+};
+function detailsHtml(std, it){
+  if(it.type==='text') return '';
+  const rows = detailRows(std, it.code) || [];
+  if(!rows.length){
+    return '<div class="dt-box"><span class="dt-toggle" onclick="detailAdd(\''+std+"','"+it.code+'\')">＋ 明细台账（按子项拆解，自动汇总）</span></div>';
+  }
+  const sum = detailSum(std, it.code);
+  const units = [];
+  rows.forEach(r=>{ const u=(r.unit||'').trim(); if(u && units.indexOf(u)<0) units.push(u); });
+  const mixed = units.length>1;
+  return '<div class="dt-box open"><div class="dt-rows">'+rows.map((r,i)=>
+    '<div class="dt-row">'+
+    '<input class="input dt-name" placeholder="子项（例：北京办公室 / 一车间）" value="'+esc(r.name||'')+'" oninput="onDetail(\''+std+"','"+it.code+'\','+i+',\'name\',this)">'+
+    '<input class="input dt-val" placeholder="数值" value="'+esc(r.val||'')+'" oninput="onDetail(\''+std+"','"+it.code+'\','+i+',\'val\',this)">'+
+    '<input class="input dt-unit" placeholder="单位" value="'+esc(r.unit||'')+'" oninput="onDetail(\''+std+"','"+it.code+'\','+i+',\'unit\',this)">'+
+    '<input class="input dt-note" placeholder="备注 / 来源" value="'+esc(r.note||'')+'" oninput="onDetail(\''+std+"','"+it.code+'\','+i+',\'note\',this)">'+
+    '<button class="tool-btn dt-del" onclick="detailDel(\''+std+"','"+it.code+'\','+i+')">✕</button></div>'
+  ).join('')+'</div>'+
+  '<div class="dt-sum'+(mixed?' dt-warn':'')+'">Σ 自动汇总 = <b data-dsum="'+std+':'+it.code+'">'+(sum===null?'—':sum)+'</b> '+esc(it.unit||'')+
+    '<span class="dt-add" onclick="detailAdd(\''+std+"','"+it.code+'\')">＋ 再加一行</span>'+
+    (mixed?'<div class="dt-warnline">⚠ 明细单位不一致（'+esc(units.join('、'))+'），请确认已统一口径后再汇总</div>':'')+
+  '</div></div>';
 }
 
 /* ---------------- 通用工具 ---------------- */
@@ -136,9 +211,12 @@ window.onVal = function(std, code, field, el){
   refreshStatus(std, code);
   refreshProgress();
 };
+/* 状态循环：未填/已填 → 待复核 → 已核对 → 取消（回到原态） */
 window.toggleFlag = function(std, code){
   const k = flagKey(std, code);
-  if(store.flags[k]) delete store.flags[k]; else store.flags[k] = true;
+  if(store.checked && store.checked[k]){ delete store.checked[k]; }
+  else if(store.flags[k]){ delete store.flags[k]; store.checked[k] = true; }
+  else{ store.flags[k] = true; }
   save();
   refreshStatus(std, code);
   refreshProgress();
@@ -164,6 +242,7 @@ function findItem(std, code){
   return found;
 }
 function statusOf(std, code){
+  if(store.checked && store.checked[flagKey(std, code)]) return ['st-ok','已核对'];
   if(store.flags[flagKey(std, code)]) return ['st-check','待复核'];
   return isFilled(getVal(std, code)) ? ['st-done','已填'] : ['st-todo','未填'];
 }
@@ -173,7 +252,7 @@ function refreshStatus(std, code){
   const [cls, txt] = statusOf(std, code);
   el.className = 'st ' + cls;
   el.textContent = txt;
-  el.title = txt==='待复核' ? '点击取消待复核' : '点击标记为待复核';
+  el.title = txt==='待复核' ? '点击标记为已核对' : txt==='已核对' ? '点击取消已核对' : '点击标记为待复核';
 }
 
 /* ---------------- 进度与区块圆点 ---------------- */
@@ -191,6 +270,45 @@ function refreshProgress(){
     '<span class="progress-txt">已填 '+filled+' / '+total+' · 待复核 '+reviewing+'</span></div>';
   clearTimeout(pillTimer);
   pillTimer = setTimeout(renderTopicPills, 400);
+  const dd = document.getElementById('deptDash');
+  if(dd && dd.style.display==='block') renderDeptDash();
+}
+
+/* ---------------- 分派总览（部门 × 进度矩阵 + 未归口清单） ---------------- */
+window.toggleDeptDash = function(){
+  const el = document.getElementById('deptDash');
+  if(!el) return;
+  const show = el.style.display !== 'block';
+  el.style.display = show ? 'block' : 'none';
+  if(show) renderDeptDash();
+};
+function renderDeptDash(){
+  const el = document.getElementById('deptDash');
+  if(!el) return;
+  const sel = selectedStds();
+  if(!sel.length){ el.innerHTML = '<div class="empty-hint">请先保存披露标准选择</div>'; return; }
+  const stat = {};
+  const unassigned = [];
+  sel.forEach(k=>STANDARDS[k].topics.forEach(t=>t.items.forEach(it=>{
+    const im = store.itemMeta[vkey(k, it.code)] || {};
+    const d = (im.dept||'').trim() || '未指定部门';
+    if(!stat[d]) stat[d] = { total:0, filled:0, checked:0 };
+    stat[d].total++;
+    if(isFilled(getVal(k, it.code))) stat[d].filled++;
+    if(store.checked && store.checked[flagKey(k, it.code)]) stat[d].checked++;
+    if(d==='未指定部门') unassigned.push({ std:k, code:it.code, name:it.name||'', topic:t.name });
+  })));
+  const rows = Object.keys(stat).sort((a,b)=>
+      a==='未指定部门' ? 1 : b==='未指定部门' ? -1 : stat[b].total - stat[a].total)
+    .map(d=>'<tr><td>'+esc(d)+'</td><td>'+stat[d].total+'</td><td>'+stat[d].filled+'</td><td>'+stat[d].checked+'</td>'+
+      '<td><div class="progress-bar" style="width:110px"><i style="width:'+Math.round(stat[d].filled/stat[d].total*100)+'%"></i></div></td></tr>').join('');
+  let ua = '';
+  if(unassigned.length){
+    ua = '<div class="dd-ua"><b>未归口 '+unassigned.length+' 项</b><span class="dd-ua-tip">（点标签跳转对应标准，在议题顶部可批量归口）</span>'+
+      unassigned.slice(0,20).map(u=>'<span class="dp-gap dd-jump" onclick="jumpStd(\''+u.std+'\')">'+u.code+' '+esc(u.name||u.topic)+'</span>').join('')+
+      (unassigned.length>20 ? '<span class="dp-more">… 等共 '+unassigned.length+' 项</span>' : '')+'</div>';
+  }
+  el.innerHTML = '<table class="pv"><tr><th>部门</th><th>归口指标</th><th>已填</th><th>已核对</th><th>填报进度</th></tr>'+rows+'</table>'+ua;
 }
 function topicDot(t, stdKey){
   const done = t.items.filter(i=>isFilled(getVal(stdKey, i.code))).length;
@@ -202,12 +320,17 @@ function topicDot(t, stdKey){
 function inputFor(std, it){
   const v = getVal(std, it.code);
   const id = std + "','" + it.code;
+  const locked = hasDetails(std, it.code);
+  const numInput = ph=>'<input class="input'+(locked?' dt-locked':'')+'" data-in="'+std+':'+it.code+'"'+
+    (locked?' readonly title="由明细台账自动汇总，请在下方明细台账中修改"':'')+
+    ' placeholder="'+ph+'" value="'+esc(v.v||'')+'" oninput="onVal(\''+id+'\',\'v\',this)">';
   if(it.type==='num')
-    return '<div class="input-line"><input class="input" data-in="'+std+':'+it.code+'" placeholder="填写汇总数值" value="'+esc(v.v||'')+'" oninput="onVal(\''+id+'\',\'v\',this)"><span class="unit">'+esc(it.unit||'')+'</span></div>';
+    return '<div class="input-line">'+numInput('填写汇总数值')+'<span class="unit">'+esc(it.unit||'')+'</span></div>'+detailsHtml(std, it);
   if(it.type==='text')
     return '<textarea class="ta" data-in="'+std+':'+it.code+'" placeholder="填写汇总后的定性描述（可粘贴要点，系统不做字数限制）" oninput="onVal(\''+id+'\',\'t\',this)">'+esc(v.t||'')+'</textarea>';
-  return '<div class="input-line"><input class="input" data-in="'+std+':'+it.code+'" placeholder="定量部分：填写汇总数值" value="'+esc(v.v||'')+'" oninput="onVal(\''+id+'\',\'v\',this)"><span class="unit">'+esc(it.unit||'')+'</span></div>'+
-         '<textarea class="ta" data-in-t="'+std+':'+it.code+'" placeholder="定性部分：填写文字描述" oninput="onVal(\''+id+'\',\'t\',this)">'+esc(v.t||'')+'</textarea>';
+  return '<div class="input-line">'+numInput('定量部分：填写汇总数值')+'<span class="unit">'+esc(it.unit||'')+'</span></div>'+
+         '<textarea class="ta" data-in-t="'+std+':'+it.code+'" placeholder="定性部分：填写文字描述" oninput="onVal(\''+id+'\',\'t\',this)">'+esc(v.t||'')+'</textarea>'+
+         detailsHtml(std, it);
 }
 function yoyHtml(std, it){
   const prevY = String(parseInt(store.meta.year) - 1);
@@ -441,7 +564,7 @@ function renderBody(){
       div.innerHTML =
         '<div class="item-head"><span class="code">'+esc(it.code)+'</span>'+cardTitle(it)+
           '<span class="tag '+tagCls+'">'+tagTxt+'</span>'+
-          '<span class="st '+stCls+'" data-st="'+activeStd+':'+it.code+'" title="点击标记为待复核" onclick="toggleFlag(\''+activeStd+"','"+it.code+'\')" style="cursor:pointer">'+stTxt+'</span>'+
+          '<span class="st '+stCls+'" data-st="'+activeStd+':'+it.code+'" title="点击切换核对状态（待复核 → 已核对）" onclick="toggleFlag(\''+activeStd+"','"+it.code+'\')" style="cursor:pointer">'+stTxt+'</span>'+
           useTagsHtml(activeStd, it.code)+'</div>'+
         '<div class="req-line"><span class="k">披露要求</span>'+esc(it.req)+'</div>'+
         inputFor(activeStd, it)+
@@ -472,7 +595,7 @@ function renderBody(){
         html += '<tr'+(off?' style="display:none"':'')+'><td class="c-code">'+esc(it.code)+'</td>'+
           '<td>'+(it.name?'<b>'+esc(it.name)+'</b>　':'')+esc(it.req)+'</td>'+
           '<td class="c-unit">'+esc(it.unit||'')+'</td>'+
-          '<td><input class="input" data-in="'+activeStd+':'+it.code+'" placeholder="汇总数值" value="'+esc(v.v||'')+'" oninput="onVal(\''+activeStd+"','"+it.code+'\',\'v\',this)"></td>'+
+          '<td><input class="input'+(hasDetails(activeStd, it.code)?' dt-locked':'')+'" data-in="'+activeStd+':'+it.code+'"'+(hasDetails(activeStd, it.code)?' readonly title="由明细台账自动汇总（明细在「按议题区块」视图维护）"':'')+' placeholder="汇总数值" value="'+esc(v.v||'')+'" oninput="onVal(\''+activeStd+"','"+it.code+'\',\'v\',this)"></td>'+
           '<td class="c-use">'+(uses.length?uses.join(' · '):'—')+'</td>'+
           '<td class="c-src"><select class="select" onchange="onSrc(\''+activeStd+"','"+it.code+'\',\'dept\',this)">'+deptOptionsHtml(im.dept||'')+'</select>'+
           '<input class="input" placeholder="来源说明" value="'+esc(im.src||'')+'" oninput="onSrc(\''+activeStd+"','"+it.code+'\',\'src\',this)"></td></tr>';
@@ -502,7 +625,7 @@ function renderBody(){
       html += '<div class="item">'+
         '<div class="item-head"><span class="code">'+esc(it.code)+'</span>'+cardTitle(it)+
           '<span class="tag '+tc+'">'+tt+'</span>'+
-          '<span class="st '+stCls+'" data-st="'+activeStd+':'+it.code+'" title="点击标记为待复核" onclick="toggleFlag(\''+activeStd+"','"+it.code+'\')" style="cursor:pointer">'+stTxt+'</span>'+
+          '<span class="st '+stCls+'" data-st="'+activeStd+':'+it.code+'" title="点击切换核对状态（待复核 → 已核对）" onclick="toggleFlag(\''+activeStd+"','"+it.code+'\')" style="cursor:pointer">'+stTxt+'</span>'+
           useTagsHtml(activeStd, it.code)+'</div>'+
         '<div class="req-line"><span class="k">披露要求</span>'+esc(it.req)+'</div>'+
         inputFor(activeStd, it)+
@@ -750,6 +873,61 @@ window.exportExcel = function(){
   XLSX.writeFile(wb, 'ESG填报_' + (m.company||'未命名') + '_' + (m.year||'') + '.xlsx');
 };
 
+/* 导入核心（可测试）：兼容两种导出格式
+   格式一「填报底稿」：列 = 标准/编号/…/定量值/定性内容
+   格式二「收资清单」：列 = 标准/编号/…/本期填报/来源说明（按指标性质自动判读定量/定性）
+   与现有值冲突的行不覆盖，返回 conflicts 交由调用方确认 */
+function importWb(wb){
+  let n = 0;
+  const conflicts = [];
+  wb.SheetNames.forEach(sn=>{
+    if(sn==='基本信息') return;
+    XLSX.utils.sheet_to_json(wb.Sheets[sn]).forEach(r=>{
+      const code = String(r['编号']||'').trim();
+      const std = stdByName(String(r['标准']||'').trim()) || stdByName(code);
+      if(!std || !code) return;
+      const it = findItem(std, code);
+      if(!it) return;
+      const k = vkey(std, code), yd = yearData();
+      const writes = [];
+      if(('定量值' in r) || ('定性内容' in r)){
+        const qv = r['定量值'], qt = r['定性内容'];
+        if(qv!==undefined && String(qv).trim()!=='') writes.push(['v', String(qv).trim()]);
+        if(qt!==undefined && String(qt).trim()!=='') writes.push(['t', String(qt).trim()]);
+      }else if('本期填报' in r){
+        const cell = r['本期填报'];
+        if(cell!==undefined && String(cell).trim()!==''){
+          const s = String(cell).trim();
+          if(it.type==='num') writes.push(['v', s]);
+          else if(it.type==='text') writes.push(['t', s]);
+          else writes.push([/^-?[\d,.]+%?$/.test(s) ? 'v' : 't', s]);   // 定性/定量：数值入定量，否则入定性
+        }
+      }
+      writes.forEach(([field, txt])=>{
+        if(!yd.values[k]) yd.values[k] = {};
+        const old = yd.values[k][field];
+        if(old && String(old).trim() && String(old).trim()!==txt){
+          conflicts.push({ std: std, code: code, field: field, old: String(old).trim(), val: txt, sheet: sn });
+        }else if(String(old||'').trim()!==txt){
+          yd.values[k][field] = txt; n++;
+        }
+      });
+      // 收资清单的「来源说明」→ 证据来源（仅在工具内为空时补，不覆盖人工填写）
+      const src = String(r['来源说明']||'').trim();
+      if(('本期填报' in r) && src){
+        const im = itemMeta(std, code);
+        if(!(im.src||'').trim()) im.src = src;
+      }
+    });
+  });
+  save();
+  return { n: n, conflicts: conflicts };
+}
+function applyConflicts(conflicts){
+  const yd = yearData();
+  conflicts.forEach(c=>{ yd.values[vkey(c.std, c.code)][c.field] = c.val; });
+  save();
+}
 window.importExcel = function(input){
   const f = input.files[0];
   if(!f) return;
@@ -758,22 +936,22 @@ window.importExcel = function(input){
   rd.onload = e=>{
     try{
       const wb = XLSX.read(e.target.result, { type:'array' });
-      let n = 0;
-      wb.SheetNames.forEach(sn=>{
-        if(sn==='基本信息') return;
-        XLSX.utils.sheet_to_json(wb.Sheets[sn]).forEach(r=>{
-          const code = String(r['编号']||'').trim();
-          const std = stdByName(String(r['标准']||'').trim()) || stdByName(code);
-          if(!std || !code || !findItem(std, code)) return;
-          const qv = r['定量值'], qt = r['定性内容'];
-          const k = vkey(std, code), yd = yearData();
-          if(qv!==undefined && String(qv).trim()!==''){ if(!yd.values[k]) yd.values[k]={}; yd.values[k].v = String(qv).trim(); n++; }
-          if(qt!==undefined && String(qt).trim()!==''){ if(!yd.values[k]) yd.values[k]={}; yd.values[k].t = String(qt).trim(); n++; }
-        });
-      });
-      save();
+      const res = importWb(wb);
       render();
-      alert('导入完成：写入 ' + n + ' 个数据点（归属 ' + (store.meta.year||'') + ' 年度）');
+      const msg = '导入完成：写入 ' + res.n + ' 个数据点（归属 ' + (store.meta.year||'') + ' 年度）';
+      if(res.conflicts.length){
+        const lines = res.conflicts.slice(0,15).map(c=>
+          c.std+':'+c.code+'（'+(c.field==='v'?'定量':'定性')+'）：现有「'+c.old.slice(0,20)+'」≠ 导入「'+c.val.slice(0,20)+'」');
+        if(confirm(msg + '\n\n检测到 ' + res.conflicts.length + ' 处与现有值冲突（暂未覆盖）：\n' + lines.join('\n') +
+          (res.conflicts.length>15 ? '\n… 等共 '+res.conflicts.length+' 处' : '') +
+          '\n\n点「确定」= 用导入值覆盖这些冲突；点「取消」= 保留现有值')){
+          applyConflicts(res.conflicts);
+          render();
+          alert('已用导入值覆盖 ' + res.conflicts.length + ' 处冲突');
+        }
+      }else{
+        alert(msg);
+      }
     }catch(err){ alert('导入失败：' + err.message); }
     input.value = '';
   };
@@ -793,7 +971,7 @@ window.exportDataTable = function(){
   const safeName = s=>String(s).replace(/[\\\/\?\*\[\]:]/g,'').slice(0,28);
 
   sel.forEach(k=>{
-    const rows = [['议题','编号','指标名称','单位','本期值','上期值','同比%','责任部门','来源说明']];
+    const rows = [['议题','编号','指标名称','单位','本期值','上期值','同比%','责任部门','来源说明','状态','明细构成']];
     STANDARDS[k].topics.forEach(t=>t.items.forEach(it=>{
       if(it.type==='text') return;
       const v = getVal(k, it.code), pv = getVal(k, it.code, prevY);
@@ -801,10 +979,12 @@ window.exportDataTable = function(){
       let yoy = '';
       const pn = parseFloat((pv.v||'').replace(/,/g,'')), cn = parseFloat((v.v||'').replace(/,/g,''));
       if(!isNaN(pn) && !isNaN(cn) && pn!==0) yoy = ((cn-pn)/pn*100).toFixed(1);
-      rows.push([t.name, it.code, it.name||'', it.unit||'', v.v||'', pv.v||'', yoy, im.dept||'', im.src||'']);
+      const dts = detailRows(k, it.code) || [];
+      const dtTxt = dts.length ? dts.map(d=>(d.name||'未命名子项')+': '+(d.val||'')).join('；') : '';
+      rows.push([t.name, it.code, it.name||'', it.unit||'', v.v||'', pv.v||'', yoy, im.dept||'', im.src||'', statusOf(k, it.code)[1], dtTxt]);
     }));
     const ws = XLSX.utils.aoa_to_sheet(rows);
-    ws['!cols'] = [{wch:16},{wch:8},{wch:24},{wch:12},{wch:14},{wch:14},{wch:8},{wch:14},{wch:34}];
+    ws['!cols'] = [{wch:16},{wch:8},{wch:24},{wch:12},{wch:14},{wch:14},{wch:8},{wch:14},{wch:34},{wch:8},{wch:40}];
     XLSX.utils.book_append_sheet(wb, ws, safeName(shortName(k)+'数据表'));
   });
 
@@ -831,9 +1011,34 @@ document.getElementById('btnExport').addEventListener('click', exportExcel);
 document.getElementById('btnExportData').addEventListener('click', exportDataTable);
 document.getElementById('btnImport').addEventListener('click', ()=>document.getElementById('fileInput').click());
 document.getElementById('fileInput').addEventListener('change', function(){ importExcel(this); });
+document.getElementById('btnDeptDash').addEventListener('click', toggleDeptDash);
+// 导出菜单：点选项后自动收起
+document.querySelectorAll('#exportMenu .em-list button').forEach(b=>
+  b.addEventListener('click', ()=>{ document.getElementById('exportMenu').open = false; }));
+
+/* ---------------- 基本信息折叠 ---------------- */
+function applyMetaFold(){
+  const card = document.getElementById('metaCard');
+  const btn = document.getElementById('btnMetaFold');
+  const sum = document.getElementById('metaSummary');
+  if(!card || !btn) return;
+  const folded = !!store.ui.metaFold;
+  card.classList.toggle('folded', folded);
+  btn.textContent = folded ? '展开 ▾' : '收起 ▴';
+  if(sum) sum.textContent = folded
+    ? [store.meta.company, store.meta.year ? store.meta.year+' 年度' : '', (store.stdSel||[]).map(shortName).join(' · ')].filter(Boolean).join('　')
+    : '';
+}
+document.getElementById('btnMetaFold').addEventListener('click', ()=>{
+  store.ui.metaFold = !store.ui.metaFold;
+  save(); applyMetaFold();
+});
 
 /* ---------------- 初始化 ---------------- */
 bindMeta();
+// 已填公司全称的项目，默认收起基本信息区（可随时展开）
+if(store.meta.company && store.ui.metaFold===undefined) store.ui.metaFold = true;
+applyMetaFold();
 renderOffices();
 renderDepts();
 bindChecks();
